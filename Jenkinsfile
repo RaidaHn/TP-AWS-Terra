@@ -118,5 +118,8 @@ pipeline {
       //   message: "❌ ${params.ACTION.toUpperCase()} ${ENVIRONMENT} - ${CLIENT_NAME} échoué")
       echo "❌ ${params.ACTION.toUpperCase()} ${ENVIRONMENT} - ${CLIENT_NAME} échoué"
     }
+    always {
+        cleanWs()
+    }
   }
 }
