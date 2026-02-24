@@ -16,8 +16,8 @@ pipeline {
             steps {
                 script {
                     def userInputs = input message: 'Que voulez-vous faire ?', ok: 'Valider', parameters: [
-                        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Choisir l'action Terraform'),
-                        choice(name: 'ENVIRONMENT', choices: ['DEV', 'VALIDATION', 'PROD'], description: 'Choisir l'environnement de déploiement')
+                        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Choisir l\'action Terraform'),
+                        choice(name: 'ENVIRONMENT', choices: ['DEV', 'VALIDATION', 'PROD'], description: 'Choisir l\'environnement de déploiement')
                     ]
                     env.TERRAFORM_ACTION = userInputs.ACTION
                     env.TERRAFORM_ENV = userInputs.ENVIRONMENT
