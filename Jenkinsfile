@@ -51,9 +51,12 @@ pipeline {
     }
 
     stage('Terraform Init') {
-      steps {
-        sh 'terraform init -input=false'
-      }
+        steps {
+            sh """
+            terraform init -input=false \
+                -backend-config="key=${CLIENT_NAME}-${ENVIRONMENT}.tfstate"
+            """
+        }
     }
 
     stage('Terraform Validate') {
