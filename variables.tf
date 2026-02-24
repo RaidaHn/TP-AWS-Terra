@@ -32,3 +32,13 @@ variable "private_subnets" {
     "private-b" = { cidr = "10.10.4.0/24", az = "us-east-1b" }
   }
 }
+
+variable "environment" {
+  type        = string
+  description = "Environment name (dev, val, prod)"
+}
+
+variable "client" {
+  type        = string
+  description = "Client name"
+}

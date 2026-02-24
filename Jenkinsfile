@@ -1,46 +1,81 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['dev', 'val', 'prod'],
+            description: 'Choisir l’environnement de déploiement'
+        )
+
+        choice(
+            name: 'CLIENT',
+            choices: ['client1', 'client2', 'client3'],
+            description: 'Choisir le client'
+        )
+    }
+
+
+    environment {
+        ENVIRONMENT      = "${params.DEPLOY_ENV}"
+        CLIENT_NAME      = "${params.CLIENT}"
+    }
+
     stages {
+
+        stage('Afficher paramètres') {
+            steps {
+                echo "Environnement sélectionné : ${ENVIRONMENT}"
+                echo "Client sélectionné : ${CLIENT_NAME}"
+            }
+        }
+
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                sh 'terraform init -input=false'
             }
         }
+
+        stage('Terraform Validate') {
+            steps {
+                sh 'terraform validate'
+            }
+        }
+
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan'
+                sh "terraform plan -out=tfplan -var='environment=${ENVIRONMENT}' -var='client=${CLIENT_NAME}'"
             }
         }
+
         stage('Manual Approval') {
             steps {
-                script {
-                    def userInputs = input message: 'Que voulez-vous faire ?', ok: 'Valider', parameters: [
-                        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Choisir l\'action Terraform'),
-                        choice(name: 'ENVIRONMENT', choices: ['DEV', 'VALIDATION', 'PROD'], description: 'Choisir l\'environnement de déploiement')
-                    ]
-                    env.TERRAFORM_ACTION = userInputs.ACTION
-                    env.TERRAFORM_ENV = userInputs.ENVIRONMENT
-                }
+                input message: "Valider le déploiement ${ENVIRONMENT} pour ${CLIENT_NAME} ?", ok: 'Appliquer'
             }
         }
+
         stage('Terraform Apply') {
-            when {
-                expression { env.TERRAFORM_ACTION == 'apply' }
-            }
             steps {
-                echo "Déploiement sur l'environnement: ${env.TERRAFORM_ENV}"
-                sh 'terraform apply -auto-approve -var="environment=${TERRAFORM_ENV}"'
+                sh "terraform apply -input=false tfplan"
             }
         }
-        stage('Terraform Destroy') {
-            when {
-                expression { env.TERRAFORM_ACTION == 'destroy' }
-            }
-            steps {
-                echo "Destruction sur l'environnement: ${env.TERRAFORM_ENV}"
-                sh 'terraform destroy -auto-approve -var="environment=${TERRAFORM_ENV}"'
-            }
+    }
+
+    post {
+        success {
+            slackSend(
+                channel: "#terraform",
+                color: "good",
+                message: "Deploy ${ENVIRONMENT} - ${CLIENT_NAME} réussi"
+            )
+        }
+
+        failure {
+            slackSend(
+                channel: "#terraform",
+                color: "danger",
+                message: "Deploy ${ENVIRONMENT} - ${CLIENT_NAME} échoué"
+            )
         }
     }
 }
