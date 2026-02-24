@@ -28,7 +28,7 @@ pipeline {
   }
 
   // Optionnel (nécessite plugin AnsiColor)
-  // options { ansiColor('xterm') }
+  options { ansiColor('xterm') }
 
   stages {
 
